@@ -1,0 +1,60 @@
+{
+  "powerMultiplier": 10,
+  "buffMultiplier": 2,
+  "buffDuration": 2,
+  "btnElement": {
+    "left": 919,
+    "top": 118,
+    "scale": 1
+  },
+  "comboElementNeg": {
+    "left": 839,
+    "top": 389,
+    "scale": 0.8
+  },
+  "comboElementPos": {
+    "left": 175,
+    "top": 372,
+    "scale": 0.8
+  },
+  "floatingAnchorNeg": {
+    "left": 1019,
+    "top": 351,
+    "scale": 2.5000000000000013
+  },
+  "floatingAnchorPos": {
+    "left": 34,
+    "top": 382,
+    "scale": 2.7000000000000015
+  },
+  "targetNeg": {
+    "left": 919,
+    "top": 293,
+    "scale": 1
+  },
+  "targetPos": {
+    "left": 180,
+    "top": 280,
+    "scale": 1
+  },
+  "heliPosNeg": {
+    "left": 1047,
+    "top": 176,
+    "scale": 1
+  },
+  "heliPosPos": {
+    "left": 16,
+    "top": 172,
+    "scale": 1
+  },
+  "etaElement": {
+    "left": 284,
+    "top": 126,
+    "scale": 0.7000000000000001
+  },
+  "comboElement": {
+    "left": 303,
+    "top": 101,
+    "scale": 1.4000000000000004
+  }
+}
