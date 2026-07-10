@@ -1,10 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
 
 :root { --bg-color: #0f0f13; --panel-bg: #1a1a24; --text-main: #ffffff; --text-muted: #8e8e9f; --deck-gap: 15px; }
-* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
-body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Inter', sans-serif; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
 
-/* NUEVO: Ocultar de verdad */
+/* CORRECCIÓN VITAL: Quitamos el user-select:none de aquí para no bloquear los select */
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Inter', sans-serif; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; user-select: none; }
+
+/* CORRECCIÓN VITAL: Forzamos a que los inputs y selects SÍ se puedan usar */
+input, select, textarea { user-select: auto !important; }
+
 .d-none { display: none !important; }
 
 .app-container { width: 100%; max-width: 500px; height: 100vh; display: flex; flex-direction: column; background: var(--bg-color); box-shadow: 0 0 50px rgba(0,0,0,0.5); position: relative; }
@@ -54,7 +59,7 @@ h1 { font-size: 1rem; font-weight: 800; letter-spacing: 1px; text-transform: upp
 .deck-btn:active { transform: scale(0.92); }
 .deck-btn.playing { background: var(--btn-color) !important; box-shadow: 0 0 30px var(--btn-color), inset 0 0 15px rgba(0,0,0,0.5) !important; transform: scale(0.95); }
 
-/* Estilos internos del Botón (Normal y Emoji) */
+/* Estilos internos del Botón */
 .btn-label-normal { font-size: 0.85rem; font-weight: 800; text-align: center; z-index: 2; padding: 0 5px; text-shadow: 0 2px 5px rgba(0,0,0,1); color: #ffffff; transition: font-size 0.3s; }
 .emoji-wrapper { display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 2px; }
 .btn-emoji { font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
@@ -92,7 +97,6 @@ h1 { font-size: 1rem; font-weight: 800; letter-spacing: 1px; text-transform: upp
 .modal-content { background: var(--panel-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; display: flex; flex-direction: column; gap: 15px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto;}
 .modal-content h2 { font-size: 1.2rem; text-align: center; margin-bottom: 5px; }
 
-/* CORREGIDO: Estilos para que los options se vean en todos los navegadores */
 .modal-content input[type="text"], .modal-content select { width: 100%; padding: 12px; border-radius: 8px; border: none; background: rgba(0,0,0,0.5); color: white; outline: none; font-family: 'Inter', sans-serif; font-size: 0.9rem;}
 select option { background-color: var(--panel-bg); color: #ffffff; font-size: 1.2rem; }
 
@@ -102,7 +106,7 @@ select option { background-color: var(--panel-bg); color: #ffffff; font-size: 1.
 .color-swatch.selected { border-color: #ffffff; transform: scale(1.15); box-shadow: 0 0 15px currentColor; }
 
 .add-color-wrapper { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; }
-.add-color-wrapper input[type="color"] { border: none; background: transparent; height: 40px; width: 40px; cursor: pointer; border-radius: 50%; }
+.add-color-wrapper input[type="color"] { border: none; background: transparent; height: 40px; width: 40px; cursor: pointer; border-radius: 50%; padding: 0; }
 .emoji-select { width: 60px !important; text-align: center; font-size: 1.2rem !important; padding: 5px !important; cursor: pointer; }
 .btn-add-color { background: #333; color: white; border: none; border-radius: 6px; padding: 10px; font-weight: bold; cursor: pointer; flex-grow: 1; }
 
@@ -114,7 +118,7 @@ select option { background-color: var(--panel-bg); color: #ffffff; font-size: 1.
 .color-edit-input { -webkit-appearance: none; border: none; width: 30px; height: 30px; border-radius: 5px; cursor: pointer; background: transparent; padding: 0; }
 .color-edit-input::-webkit-color-swatch-wrapper { padding: 0; }
 .color-edit-input::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0.2); border-radius: 5px; }
-.emoji-edit-input { width: 60px !important; height: 35px; padding: 0 !important; text-align: center; font-size: 1.2rem !important; }
+.emoji-edit-input { width: 50px !important; height: 30px; padding: 0 5px !important; font-size: 1rem !important; }
 .btn-delete-cat { background: #ff3366; color: white; border: none; border-radius: 5px; width: 30px; height: 30px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
 /* Botones genéricos de modales */

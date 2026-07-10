@@ -1,5 +1,5 @@
 /* =========================================
-   1. VARIABLES GLOBALES Y EMOJIS
+   1. VARIABLES GLOBALES Y EMOJIS (v1.1.18)
    ========================================= */
 let colorCategories = []; 
 let sounds = [];
@@ -13,9 +13,9 @@ const EMOJI_LIST = [
 const audioPool = {}; 
 let activeMusicId = null;
 
-let currentSortMode = localStorage.getItem('gati_sort_v1117') || 'color';
-let isCompactSize = localStorage.getItem('gati_size_v1117') === 'true';
-let isEmojiMode = localStorage.getItem('gati_view_v1117') === 'emoji';
+let currentSortMode = localStorage.getItem('gati_sort_v1118') || 'color';
+let isCompactSize = localStorage.getItem('gati_size_v1118') === 'true';
+let isEmojiMode = localStorage.getItem('gati_view_v1118') === 'emoji';
 
 const DEFAULT_BACKUP_URL = "https://raw.githubusercontent.com/caremperador/audios/main/gatimusic_backup%202.json";
 
@@ -34,9 +34,9 @@ function sortSoundsArray() {
 }
 
 function saveData() {
-  localStorage.setItem('gati_colors_v1117', JSON.stringify(colorCategories));
+  localStorage.setItem('gati_colors_v1118', JSON.stringify(colorCategories));
   const soundsToSave = sounds.map(s => ({...s, localUrl: undefined}));
-  localStorage.setItem('gati_sounds_v1117', JSON.stringify(soundsToSave));
+  localStorage.setItem('gati_sounds_v1118', JSON.stringify(soundsToSave));
 }
 
 function migrateCategories(cats) {
@@ -114,8 +114,8 @@ async function preloadSingleAudio(sound) {
 async function initApp() {
   populateEmojiSelects();
 
-  const savedColors = localStorage.getItem('gati_colors_v1117') || localStorage.getItem('gati_colors_v1116');
-  const savedSounds = localStorage.getItem('gati_sounds_v1117') || localStorage.getItem('gati_sounds_v1116');
+  const savedColors = localStorage.getItem('gati_colors_v1118') || localStorage.getItem('gati_colors_v1117');
+  const savedSounds = localStorage.getItem('gati_sounds_v1118') || localStorage.getItem('gati_sounds_v1117');
 
   if (savedColors && savedSounds) {
     colorCategories = migrateCategories(JSON.parse(savedColors));
@@ -170,9 +170,9 @@ function applyUIStates() {
   viewModeBtn.textContent = isEmojiMode ? 'Vista: Emoji' : 'Vista: Texto';
 }
 
-sizeModeBtn.addEventListener('click', () => { isCompactSize = !isCompactSize; localStorage.setItem('gati_size_v1117', isCompactSize); applyUIStates(); });
-sortModeBtn.addEventListener('click', () => { currentSortMode = currentSortMode === 'color' ? 'top' : 'color'; localStorage.setItem('gati_sort_v1117', currentSortMode); applyUIStates(); sortSoundsArray(); renderDeck(); });
-viewModeBtn.addEventListener('click', () => { isEmojiMode = !isEmojiMode; localStorage.setItem('gati_view_v1117', isEmojiMode ? 'emoji' : 'text'); applyUIStates(); renderDeck(); });
+sizeModeBtn.addEventListener('click', () => { isCompactSize = !isCompactSize; localStorage.setItem('gati_size_v1118', isCompactSize); applyUIStates(); });
+sortModeBtn.addEventListener('click', () => { currentSortMode = currentSortMode === 'color' ? 'top' : 'color'; localStorage.setItem('gati_sort_v1118', currentSortMode); applyUIStates(); sortSoundsArray(); renderDeck(); });
+viewModeBtn.addEventListener('click', () => { isEmojiMode = !isEmojiMode; localStorage.setItem('gati_view_v1118', isEmojiMode ? 'emoji' : 'text'); applyUIStates(); renderDeck(); });
 
 /* =========================================
    5. REPRODUCTOR GLOBAL Y EVENTOS
@@ -182,12 +182,12 @@ let editingId = null;
 let selectedCategoryColor = '#ffffff';
 let currentVolume = 1;
 
-let isPlayerMinimized = localStorage.getItem('gati_player_min_v1117') === 'true';
+let isPlayerMinimized = localStorage.getItem('gati_player_min_v1118') === 'true';
 const livePlayer = document.getElementById('livePlayer');
 const minimizeBtn = document.getElementById('minimizeBtn');
 
 function applyMinimizedState() { if (isPlayerMinimized) livePlayer.classList.add('minimized'); else livePlayer.classList.remove('minimized'); }
-minimizeBtn.addEventListener('click', () => { isPlayerMinimized = !isPlayerMinimized; localStorage.setItem('gati_player_min_v1117', isPlayerMinimized); applyMinimizedState(); });
+minimizeBtn.addEventListener('click', () => { isPlayerMinimized = !isPlayerMinimized; localStorage.setItem('gati_player_min_v1118', isPlayerMinimized); applyMinimizedState(); });
 applyMinimizedState(); 
 
 const sfxGrid = document.getElementById('sfxGrid');
@@ -344,7 +344,6 @@ toggleEditBtn.addEventListener('click', () => {
   renderDeck();
 });
 
-// Selector de Tipo de Audio dinámico (CORREGIDO con d-none)
 document.getElementById('newType').addEventListener('change', (e) => {
   if(e.target.value === 'sfx') { document.getElementById('sfxEmojiSection').classList.remove('d-none'); } 
   else { document.getElementById('sfxEmojiSection').classList.add('d-none'); }
@@ -444,7 +443,6 @@ let sortableCatInstance = null;
 
 function renderCategoryList() {
   sortableColorList.innerHTML = '';
-  
   const emojiOptionsTemplate = EMOJI_LIST.map(e => `<option value="${e}">${e}</option>`).join('');
 
   colorCategories.forEach(cat => {
@@ -501,13 +499,10 @@ document.getElementById('cancelCatBtn').addEventListener('click', () => category
 document.getElementById('saveCatBtn').addEventListener('click', () => {
   const newCats = [];
   document.querySelectorAll('#sortableColorList .sortable-item').forEach(item => {
-    newCats.push({
-      color: item.querySelector('.color-edit-input').value,
-      emoji: item.querySelector('.emoji-edit-input').value || '🎵'
-    });
+    newCats.push({ color: item.querySelector('.color-edit-input').value, emoji: item.querySelector('.emoji-edit-input').value || '🎵' });
   });
   colorCategories = newCats;
-  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1117', 'color'); updateSortBtnUI();
+  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1118', 'color'); updateSortBtnUI();
   sortSoundsArray(); saveData(); categoryModal.classList.add('hidden'); renderDeck();
 });
 
@@ -524,10 +519,7 @@ document.getElementById('openSortAudiosBtn').addEventListener('click', () => {
   sortAudioColorFilter.innerHTML = '';
   colorCategories.forEach(cat => {
     const opt = document.createElement('option');
-    opt.value = cat.color;
-    opt.textContent = `${cat.emoji} ${cat.color.toUpperCase()}`;
-    opt.style.background = cat.color;
-    opt.style.color = "black";
+    opt.value = cat.color; opt.textContent = `${cat.emoji} ${cat.color.toUpperCase()}`; opt.style.background = cat.color; opt.style.color = "black";
     sortAudioColorFilter.appendChild(opt);
   });
   renderSortableAudiosList();
@@ -538,7 +530,6 @@ sortAudioColorFilter.addEventListener('change', renderSortableAudiosList);
 function renderSortableAudiosList() {
   const filterColor = sortAudioColorFilter.value;
   sortableAudiosList.innerHTML = '';
-  
   const filteredSounds = sounds.filter(s => s.color === filterColor && s.type === 'music');
   
   filteredSounds.forEach(sound => {
@@ -558,7 +549,6 @@ function renderSortableAudiosList() {
 }
 
 document.getElementById('cancelSortAudiosBtn').addEventListener('click', () => sortAudiosModal.classList.add('hidden'));
-
 document.getElementById('saveSortAudiosBtn').addEventListener('click', () => {
   const filterColor = sortAudioColorFilter.value;
   const newOrderIds = Array.from(document.querySelectorAll('.sortable-audio-item')).map(el => Number(el.dataset.id));
@@ -570,15 +560,12 @@ document.getElementById('saveSortAudiosBtn').addEventListener('click', () => {
     return 0; 
   });
   
-  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1117', 'color'); updateSortBtnUI();
-  saveData();
-  sortAudiosModal.classList.add('hidden');
-  renderDeck();
+  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1118', 'color'); updateSortBtnUI();
+  saveData(); sortAudiosModal.classList.add('hidden'); renderDeck();
 });
 
-
 /* =========================================
-   10. IMPORTAR / EXPORTAR JSON Y URL
+   10. IMPORTAR / EXPORTAR
    ========================================= */
 const backupModal = document.getElementById('backupModal');
 document.getElementById('openBackupModalBtn').addEventListener('click', () => backupModal.classList.remove('hidden'));
@@ -587,7 +574,7 @@ document.getElementById('closeBackupBtn').addEventListener('click', () => backup
 document.getElementById('exportJsonBtn').addEventListener('click', () => {
   const soundsToSave = sounds.map(s => ({...s, localUrl: undefined}));
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ colors: colorCategories, sounds: soundsToSave }));
-  const a = document.createElement('a'); a.href = dataStr; a.download = "gatimusic_backup_v1.1.17.json"; document.body.appendChild(a); a.click(); a.remove();
+  const a = document.createElement('a'); a.href = dataStr; a.download = "gatimusic_backup_v1.1.18.json"; document.body.appendChild(a); a.click(); a.remove();
 });
 
 document.getElementById('importJsonTriggerBtn').addEventListener('click', () => document.getElementById('importJsonInput').click());
@@ -601,8 +588,7 @@ document.getElementById('importJsonInput').addEventListener('change', (e) => {
         colorCategories = migrateCategories(data.colors); sounds = data.sounds;
         sounds.forEach(s => { if(!s.type) s.type = 'music'; if(!s.clicks) s.clicks = 0; s.localUrl = undefined; });
         sortSoundsArray(); saveData(); backupModal.classList.add('hidden');
-        await preloadAllAudios(); renderDeck();
-        alert("¡Importado con éxito!");
+        await preloadAllAudios(); renderDeck(); alert("¡Importado con éxito!");
       } else { alert("Formato incorrecto."); }
     } catch (err) { alert("Error leyendo el archivo JSON."); }
   };
@@ -623,8 +609,7 @@ document.getElementById('importUrlBtn').addEventListener('click', async () => {
       colorCategories = migrateCategories(data.colors); sounds = data.sounds;
       sounds.forEach(s => { if(!s.type) s.type = 'music'; if(!s.clicks) s.clicks = 0; s.localUrl = undefined; });
       sortSoundsArray(); saveData(); document.getElementById('jsonUrlInput').value = ''; backupModal.classList.add('hidden');
-      await preloadAllAudios(); renderDeck();
-      alert("¡Sincronizado desde URL con éxito!");
+      await preloadAllAudios(); renderDeck(); alert("¡Sincronizado desde URL con éxito!");
     } else { alert("Archivo no válido."); }
   } catch (err) { alert(`Error: ${err.message}`); }
 });
