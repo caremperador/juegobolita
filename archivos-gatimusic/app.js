@@ -1,5 +1,5 @@
 /* =========================================
-   1. VARIABLES GLOBALES Y EMOJIS (v1.1.18)
+   1. VARIABLES GLOBALES Y EMOJIS (v1.1.19)
    ========================================= */
 let colorCategories = []; 
 let sounds = [];
@@ -13,9 +13,9 @@ const EMOJI_LIST = [
 const audioPool = {}; 
 let activeMusicId = null;
 
-let currentSortMode = localStorage.getItem('gati_sort_v1118') || 'color';
-let isCompactSize = localStorage.getItem('gati_size_v1118') === 'true';
-let isEmojiMode = localStorage.getItem('gati_view_v1118') === 'emoji';
+let currentSortMode = localStorage.getItem('gati_sort_v1119') || 'color';
+let isCompactSize = localStorage.getItem('gati_size_v1119') === 'true';
+let isEmojiMode = localStorage.getItem('gati_view_v1119') === 'emoji';
 
 const DEFAULT_BACKUP_URL = "https://raw.githubusercontent.com/caremperador/audios/main/gatimusic_backup%202.json";
 
@@ -34,9 +34,9 @@ function sortSoundsArray() {
 }
 
 function saveData() {
-  localStorage.setItem('gati_colors_v1118', JSON.stringify(colorCategories));
+  localStorage.setItem('gati_colors_v1119', JSON.stringify(colorCategories));
   const soundsToSave = sounds.map(s => ({...s, localUrl: undefined}));
-  localStorage.setItem('gati_sounds_v1118', JSON.stringify(soundsToSave));
+  localStorage.setItem('gati_sounds_v1119', JSON.stringify(soundsToSave));
 }
 
 function migrateCategories(cats) {
@@ -46,16 +46,36 @@ function migrateCategories(cats) {
   });
 }
 
-function populateEmojiSelects() {
-  const selects = document.querySelectorAll('.emoji-select');
-  const optionsHTML = EMOJI_LIST.map(e => `<option value="${e}">${e}</option>`).join('');
-  selects.forEach(sel => {
-    sel.innerHTML = optionsHTML;
+/* =========================================
+   2. EL NUEVO MOTOR: SELECTOR DE EMOJIS GLOBAL
+   ========================================= */
+let emojiTargetCallback = null;
+const emojiPickerModal = document.getElementById('emojiPickerModal');
+const globalEmojiPalette = document.getElementById('globalEmojiPalette');
+
+// Rellenamos el cuadro de emojis una sola vez
+EMOJI_LIST.forEach(emoji => {
+  const swatch = document.createElement('div');
+  swatch.className = 'emoji-swatch';
+  swatch.textContent = emoji;
+  swatch.addEventListener('click', () => {
+    if (emojiTargetCallback) emojiTargetCallback(emoji);
+    emojiPickerModal.classList.add('d-none');
   });
+  globalEmojiPalette.appendChild(swatch);
+});
+
+document.getElementById('closeEmojiPickerBtn').addEventListener('click', () => {
+  emojiPickerModal.classList.add('d-none');
+});
+
+function openEmojiPicker(callback) {
+  emojiTargetCallback = callback;
+  emojiPickerModal.classList.remove('d-none');
 }
 
 /* =========================================
-   2. MOTOR DE PRECARGA EN RAM (BLOBS)
+   3. MOTOR DE PRECARGA EN RAM (BLOBS)
    ========================================= */
 async function preloadAllAudios() {
   const loadingScreen = document.getElementById('loadingScreen');
@@ -109,13 +129,11 @@ async function preloadSingleAudio(sound) {
 }
 
 /* =========================================
-   3. INICIO DE LA APLICACIÓN
+   4. INICIO DE LA APLICACIÓN
    ========================================= */
 async function initApp() {
-  populateEmojiSelects();
-
-  const savedColors = localStorage.getItem('gati_colors_v1118') || localStorage.getItem('gati_colors_v1117');
-  const savedSounds = localStorage.getItem('gati_sounds_v1118') || localStorage.getItem('gati_sounds_v1117');
+  const savedColors = localStorage.getItem('gati_colors_v1119') || localStorage.getItem('gati_colors_v1118');
+  const savedSounds = localStorage.getItem('gati_sounds_v1119') || localStorage.getItem('gati_sounds_v1118');
 
   if (savedColors && savedSounds) {
     colorCategories = migrateCategories(JSON.parse(savedColors));
@@ -156,7 +174,7 @@ async function initApp() {
 }
 
 /* =========================================
-   4. CONTROLES DE INTERFAZ (BOTONES TOP)
+   5. CONTROLES DE INTERFAZ
    ========================================= */
 const sizeModeBtn = document.getElementById('sizeModeBtn');
 const sortModeBtn = document.getElementById('sortModeBtn');
@@ -165,33 +183,22 @@ const viewModeBtn = document.getElementById('viewModeBtn');
 function applyUIStates() {
   if (isCompactSize) { document.body.classList.add('compact-mode'); sizeModeBtn.textContent = 'Tamaño: S'; } 
   else { document.body.classList.remove('compact-mode'); sizeModeBtn.textContent = 'Tamaño: L'; }
-  
   sortModeBtn.textContent = currentSortMode === 'top' ? 'Orden: Top' : 'Orden: Color';
   viewModeBtn.textContent = isEmojiMode ? 'Vista: Emoji' : 'Vista: Texto';
 }
 
-sizeModeBtn.addEventListener('click', () => { isCompactSize = !isCompactSize; localStorage.setItem('gati_size_v1118', isCompactSize); applyUIStates(); });
-sortModeBtn.addEventListener('click', () => { currentSortMode = currentSortMode === 'color' ? 'top' : 'color'; localStorage.setItem('gati_sort_v1118', currentSortMode); applyUIStates(); sortSoundsArray(); renderDeck(); });
-viewModeBtn.addEventListener('click', () => { isEmojiMode = !isEmojiMode; localStorage.setItem('gati_view_v1118', isEmojiMode ? 'emoji' : 'text'); applyUIStates(); renderDeck(); });
+sizeModeBtn.addEventListener('click', () => { isCompactSize = !isCompactSize; localStorage.setItem('gati_size_v1119', isCompactSize); applyUIStates(); });
+sortModeBtn.addEventListener('click', () => { currentSortMode = currentSortMode === 'color' ? 'top' : 'color'; localStorage.setItem('gati_sort_v1119', currentSortMode); applyUIStates(); sortSoundsArray(); renderDeck(); });
+viewModeBtn.addEventListener('click', () => { isEmojiMode = !isEmojiMode; localStorage.setItem('gati_view_v1119', isEmojiMode ? 'emoji' : 'text'); applyUIStates(); renderDeck(); });
 
-/* =========================================
-   5. REPRODUCTOR GLOBAL Y EVENTOS
-   ========================================= */
-let isEditMode = false;
-let editingId = null;
-let selectedCategoryColor = '#ffffff';
-let currentVolume = 1;
-
-let isPlayerMinimized = localStorage.getItem('gati_player_min_v1118') === 'true';
+let isPlayerMinimized = localStorage.getItem('gati_player_min_v1119') === 'true';
 const livePlayer = document.getElementById('livePlayer');
 const minimizeBtn = document.getElementById('minimizeBtn');
 
 function applyMinimizedState() { if (isPlayerMinimized) livePlayer.classList.add('minimized'); else livePlayer.classList.remove('minimized'); }
-minimizeBtn.addEventListener('click', () => { isPlayerMinimized = !isPlayerMinimized; localStorage.setItem('gati_player_min_v1118', isPlayerMinimized); applyMinimizedState(); });
+minimizeBtn.addEventListener('click', () => { isPlayerMinimized = !isPlayerMinimized; localStorage.setItem('gati_player_min_v1119', isPlayerMinimized); applyMinimizedState(); });
 applyMinimizedState(); 
 
-const sfxGrid = document.getElementById('sfxGrid');
-const musicGrid = document.getElementById('musicGrid');
 const volContainer = document.getElementById('volumeContainer');
 const volFill = document.getElementById('volumeFill');
 let isDraggingVol = false;
@@ -201,25 +208,19 @@ function applyVolume(newVol) {
   volFill.style.width = (currentVolume * 100) + '%';
   Object.values(audioPool).forEach(audio => { audio.volume = currentVolume; });
 }
-
 function updateVolumeFromEvent(e) {
   const rect = volContainer.getBoundingClientRect();
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX; 
-  applyVolume((clientX - rect.left) / rect.width);
+  applyVolume(((e.touches ? e.touches[0].clientX : e.clientX) - rect.left) / rect.width);
 }
-
 volContainer.addEventListener('mousedown', (e) => { isDraggingVol = true; updateVolumeFromEvent(e); });
 document.addEventListener('mousemove', (e) => { if (isDraggingVol) updateVolumeFromEvent(e); });
 document.addEventListener('mouseup', () => { isDraggingVol = false; });
 volContainer.addEventListener('touchstart', (e) => { isDraggingVol = true; updateVolumeFromEvent(e); }, {passive: false});
 volContainer.addEventListener('touchmove', (e) => { if (isDraggingVol) { e.preventDefault(); updateVolumeFromEvent(e); } }, {passive: false});
 volContainer.addEventListener('touchend', () => { isDraggingVol = false; });
-
 document.addEventListener('wheel', (e) => {
-  const isAnythingPlaying = Object.values(audioPool).some(audio => !audio.paused);
-  if (!isAnythingPlaying) return; 
-  e.preventDefault(); 
-  applyVolume(currentVolume + (e.deltaY < 0 ? 0.05 : -0.05));
+  if (!Object.values(audioPool).some(audio => !audio.paused)) return; 
+  e.preventDefault(); applyVolume(currentVolume + (e.deltaY < 0 ? 0.05 : -0.05));
 }, {passive: false});
 
 function stopAllAudio() {
@@ -228,26 +229,30 @@ function stopAllAudio() {
   document.querySelectorAll('.deck-btn').forEach(b => b.classList.remove('playing'));
   livePlayer.classList.remove('visible');
 }
-
 document.getElementById('stopBtn').addEventListener('click', stopAllAudio);
 document.getElementById('miniStopBtn').addEventListener('click', stopAllAudio);
 document.addEventListener('keydown', (e) => { if (e.target.tagName !== 'INPUT' && e.code === 'Space') { e.preventDefault(); stopAllAudio(); } });
 
 /* =========================================
-   6. RENDERIZADO (SFX EMOJI INDIVIDUAL Y MÚSICA CON NÚMEROS)
+   6. RENDERIZADO
    ========================================= */
+let isEditMode = false;
+let editingId = null;
+let selectedCategoryColor = '#ffffff';
+
+const sfxGrid = document.getElementById('sfxGrid');
+const musicGrid = document.getElementById('musicGrid');
+
 function renderDeck() {
   sfxGrid.innerHTML = '';
   musicGrid.innerHTML = '';
-
   let colorCounters = {};
 
   sounds.forEach((sound) => {
     let myNumber = "";
     if (sound.type === 'music') {
         if(!colorCounters[sound.color]) colorCounters[sound.color] = 1;
-        myNumber = colorCounters[sound.color];
-        colorCounters[sound.color]++;
+        myNumber = colorCounters[sound.color]; colorCounters[sound.color]++;
     }
 
     const btn = document.createElement('div');
@@ -271,9 +276,7 @@ function renderDeck() {
     }
 
     btn.addEventListener('click', () => handleButtonPress(sound, btn));
-    
-    if (sound.type === 'sfx') sfxGrid.appendChild(btn);
-    else musicGrid.appendChild(btn);
+    if (sound.type === 'sfx') sfxGrid.appendChild(btn); else musicGrid.appendChild(btn);
   });
 
   if (isEditMode) {
@@ -289,9 +292,7 @@ function renderDeck() {
 
 function handleButtonPress(sound, btnElement) {
   if (isEditMode) { openEditModal(sound); return; }
-
-  sound.clicks = (sound.clicks || 0) + 1;
-  saveData(); 
+  sound.clicks = (sound.clicks || 0) + 1; saveData(); 
 
   let player = audioPool[sound.id];
   if (!player) { player = new Audio(sound.localUrl || sound.url); audioPool[sound.id] = player; }
@@ -340,8 +341,7 @@ toggleEditBtn.addEventListener('click', () => {
   toggleEditBtn.textContent = `Edición: ${isEditMode ? 'ON' : 'OFF'}`;
   document.getElementById('openCategoryModalBtn').style.display = isEditMode ? 'block' : 'none';
   document.getElementById('openSortAudiosBtn').style.display = isEditMode ? 'block' : 'none';
-  if(isEditMode) stopAllAudio();
-  renderDeck();
+  if(isEditMode) stopAllAudio(); renderDeck();
 });
 
 document.getElementById('newType').addEventListener('change', (e) => {
@@ -351,13 +351,10 @@ document.getElementById('newType').addEventListener('change', (e) => {
 
 const addModal = document.getElementById('addModal');
 function renderPalette() {
-  const palette = document.getElementById('colorPalette');
-  palette.innerHTML = '';
+  const palette = document.getElementById('colorPalette'); palette.innerHTML = '';
   colorCategories.forEach(cat => {
     const swatch = document.createElement('div');
-    swatch.className = 'color-swatch';
-    swatch.style.backgroundColor = cat.color;
-    swatch.style.color = cat.color;
+    swatch.className = 'color-swatch'; swatch.style.backgroundColor = cat.color; swatch.style.color = cat.color;
     if (cat.color === selectedCategoryColor) swatch.classList.add('selected');
     swatch.addEventListener('click', () => { selectedCategoryColor = cat.color; renderPalette(); });
     palette.appendChild(swatch);
@@ -376,7 +373,7 @@ function openEditModal(sound) {
     
     if (sound.type === 'sfx') {
         document.getElementById('sfxEmojiSection').classList.remove('d-none');
-        document.getElementById('newSfxEmoji').value = sound.emoji || '💥';
+        document.getElementById('sfxEmojiBtn').textContent = sound.emoji || '💥';
     } else {
         document.getElementById('sfxEmojiSection').classList.add('d-none');
     }
@@ -384,10 +381,9 @@ function openEditModal(sound) {
     if(!colorCategories.some(c => c.color === sound.color)) { colorCategories.push({color: sound.color, emoji:'🎵'}); saveData(); }
     document.getElementById('deleteBtn').style.display = "block";
   } else {
-    editingId = null;
-    document.getElementById('modalTitle').textContent = "Añadir Sonido";
+    editingId = null; document.getElementById('modalTitle').textContent = "Añadir Sonido";
     document.getElementById('newLabel').value = ''; document.getElementById('newUrl').value = '';
-    document.getElementById('newSfxEmoji').value = '💥';
+    document.getElementById('sfxEmojiBtn').textContent = '💥';
     selectedCategoryColor = colorCategories[0]?.color || '#ffffff';
     document.getElementById('deleteBtn').style.display = "none";
   }
@@ -396,12 +392,19 @@ function openEditModal(sound) {
 
 document.getElementById('cancelBtn').addEventListener('click', () => addModal.classList.add('hidden'));
 
+// Lógica del botón de emoji en el modal de SFX
+document.getElementById('sfxEmojiBtn').addEventListener('click', () => {
+  openEmojiPicker((selectedEmoji) => {
+    document.getElementById('sfxEmojiBtn').textContent = selectedEmoji;
+  });
+});
+
 document.getElementById('saveBtn').addEventListener('click', async () => {
   const type = document.getElementById('newType').value;
   const label = document.getElementById('newLabel').value;
   const url = document.getElementById('newUrl').value;
   const color = selectedCategoryColor;
-  const sfxEmoji = document.getElementById('newSfxEmoji').value;
+  const sfxEmoji = document.getElementById('sfxEmojiBtn').textContent;
   
   if (label && url) {
     let savedSoundObj;
@@ -418,11 +421,9 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
       }
     } else {
       savedSoundObj = { id: Date.now(), type, label, url, color, clicks: 0, emoji: sfxEmoji };
-      sounds.push(savedSoundObj);
-      preloadSingleAudio(savedSoundObj); 
+      sounds.push(savedSoundObj); preloadSingleAudio(savedSoundObj); 
     }
-    addModal.classList.add('hidden');
-    sortSoundsArray(); saveData(); renderDeck();
+    addModal.classList.add('hidden'); sortSoundsArray(); saveData(); renderDeck();
   } else { alert("Llena el nombre y la URL."); }
 });
 
@@ -435,7 +436,7 @@ document.getElementById('deleteBtn').addEventListener('click', () => {
 });
 
 /* =========================================
-   8. GESTOR DE CATEGORÍAS Y EMOJIS
+   8. GESTOR DE CATEGORÍAS (EMOJIS)
    ========================================= */
 const categoryModal = document.getElementById('categoryModal');
 const sortableColorList = document.getElementById('sortableColorList');
@@ -443,24 +444,27 @@ let sortableCatInstance = null;
 
 function renderCategoryList() {
   sortableColorList.innerHTML = '';
-  const emojiOptionsTemplate = EMOJI_LIST.map(e => `<option value="${e}">${e}</option>`).join('');
 
   colorCategories.forEach(cat => {
     const item = document.createElement('div');
-    item.className = 'sortable-item';
-    item.dataset.color = cat.color;
+    item.className = 'sortable-item'; item.dataset.color = cat.color;
     item.innerHTML = `
       <div class="drag-handle" title="Arrastrar">☰</div>
       <input type="color" class="color-edit-input" value="${cat.color}" title="Color">
-      <select class="emoji-edit-input" title="Emoji">${emojiOptionsTemplate}</select>
+      <div class="emoji-btn edit-emoji-btn" title="Cambiar Emoji">${cat.emoji}</div>
       <span style="font-family: monospace; color: white; flex-grow: 1; padding-left:10px;">${cat.color.toUpperCase()}</span>
       <button class="btn-delete-cat" title="Eliminar">✖</button>
     `;
 
-    item.querySelector('.emoji-edit-input').value = cat.emoji || '🎵';
+    item.querySelector('.color-edit-input').addEventListener('change', (e) => { updateCategoryColor(cat.color, e.target.value, item.querySelector('.edit-emoji-btn').textContent); });
+    
+    item.querySelector('.edit-emoji-btn').addEventListener('click', (e) => {
+      openEmojiPicker((emoji) => {
+         e.target.textContent = emoji;
+         updateCategoryColor(cat.color, item.querySelector('.color-edit-input').value, emoji);
+      });
+    });
 
-    item.querySelector('.color-edit-input').addEventListener('change', (e) => { updateCategoryColor(cat.color, e.target.value, item.querySelector('.emoji-edit-input').value); });
-    item.querySelector('.emoji-edit-input').addEventListener('change', (e) => { updateCategoryColor(cat.color, item.querySelector('.color-edit-input').value, e.target.value); });
     item.querySelector('.btn-delete-cat').addEventListener('click', () => { deleteCategoryColor(cat.color); });
     sortableColorList.appendChild(item);
   });
@@ -490,19 +494,25 @@ function deleteCategoryColor(colorToDelete) {
 }
 
 document.getElementById('openCategoryModalBtn').addEventListener('click', () => { categoryModal.classList.remove('hidden'); renderCategoryList(); });
+
+// Botón Emoji para la NUEVA categoría
+document.getElementById('newCatEmojiBtn').addEventListener('click', () => {
+  openEmojiPicker((emoji) => { document.getElementById('newCatEmojiBtn').textContent = emoji; });
+});
+
 document.getElementById('addNewColorBtn').addEventListener('click', () => {
   const newCol = document.getElementById('customColorPicker').value;
-  const newEmo = document.getElementById('customEmojiPicker').value || '🎵';
+  const newEmo = document.getElementById('newCatEmojiBtn').textContent || '🎵';
   if (!colorCategories.some(c => c.color === newCol)) { colorCategories.push({color: newCol, emoji: newEmo}); renderCategoryList(); saveData(); }
 });
 document.getElementById('cancelCatBtn').addEventListener('click', () => categoryModal.classList.add('hidden'));
 document.getElementById('saveCatBtn').addEventListener('click', () => {
   const newCats = [];
   document.querySelectorAll('#sortableColorList .sortable-item').forEach(item => {
-    newCats.push({ color: item.querySelector('.color-edit-input').value, emoji: item.querySelector('.emoji-edit-input').value || '🎵' });
+    newCats.push({ color: item.querySelector('.color-edit-input').value, emoji: item.querySelector('.edit-emoji-btn').textContent || '🎵' });
   });
   colorCategories = newCats;
-  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1118', 'color'); updateSortBtnUI();
+  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1119', 'color'); updateSortBtnUI();
   sortSoundsArray(); saveData(); categoryModal.classList.add('hidden'); renderDeck();
 });
 
@@ -515,8 +525,7 @@ const sortableAudiosList = document.getElementById('sortableAudiosList');
 let sortableAudiosInstance = null;
 
 document.getElementById('openSortAudiosBtn').addEventListener('click', () => {
-  sortAudiosModal.classList.remove('hidden');
-  sortAudioColorFilter.innerHTML = '';
+  sortAudiosModal.classList.remove('hidden'); sortAudioColorFilter.innerHTML = '';
   colorCategories.forEach(cat => {
     const opt = document.createElement('option');
     opt.value = cat.color; opt.textContent = `${cat.emoji} ${cat.color.toUpperCase()}`; opt.style.background = cat.color; opt.style.color = "black";
@@ -524,48 +533,32 @@ document.getElementById('openSortAudiosBtn').addEventListener('click', () => {
   });
   renderSortableAudiosList();
 });
-
 sortAudioColorFilter.addEventListener('change', renderSortableAudiosList);
 
 function renderSortableAudiosList() {
-  const filterColor = sortAudioColorFilter.value;
-  sortableAudiosList.innerHTML = '';
+  const filterColor = sortAudioColorFilter.value; sortableAudiosList.innerHTML = '';
   const filteredSounds = sounds.filter(s => s.color === filterColor && s.type === 'music');
   
   filteredSounds.forEach(sound => {
     const item = document.createElement('div');
-    item.className = 'sortable-item sortable-audio-item';
-    item.dataset.id = sound.id;
-    item.innerHTML = `
-      <div class="drag-handle" title="Arrastrar">☰</div>
-      <span style="flex-grow: 1; padding-left:10px; font-weight:bold; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${sound.label}</span>
-      <span style="font-size:0.7rem; color: #8e8e9f;">MUSIC</span>
-    `;
+    item.className = 'sortable-item sortable-audio-item'; item.dataset.id = sound.id;
+    item.innerHTML = `<div class="drag-handle">☰</div><span style="flex-grow: 1; padding-left:10px; font-weight:bold; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${sound.label}</span>`;
     sortableAudiosList.appendChild(item);
   });
-
   if(sortableAudiosInstance) sortableAudiosInstance.destroy();
   sortableAudiosInstance = new Sortable(sortableAudiosList, { animation: 150, handle: '.drag-handle', ghostClass: 'sortable-ghost' });
 }
-
 document.getElementById('cancelSortAudiosBtn').addEventListener('click', () => sortAudiosModal.classList.add('hidden'));
 document.getElementById('saveSortAudiosBtn').addEventListener('click', () => {
   const filterColor = sortAudioColorFilter.value;
   const newOrderIds = Array.from(document.querySelectorAll('.sortable-audio-item')).map(el => Number(el.dataset.id));
-  
-  sounds.sort((a, b) => {
-    if (a.color === filterColor && b.color === filterColor && a.type === 'music' && b.type === 'music') {
-      return newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id);
-    }
-    return 0; 
-  });
-  
-  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1118', 'color'); updateSortBtnUI();
+  sounds.sort((a, b) => { if (a.color === filterColor && b.color === filterColor && a.type === 'music' && b.type === 'music') { return newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id); } return 0; });
+  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1119', 'color'); updateSortBtnUI();
   saveData(); sortAudiosModal.classList.add('hidden'); renderDeck();
 });
 
 /* =========================================
-   10. IMPORTAR / EXPORTAR
+   10. IMPORTAR / EXPORTAR JSON
    ========================================= */
 const backupModal = document.getElementById('backupModal');
 document.getElementById('openBackupModalBtn').addEventListener('click', () => backupModal.classList.remove('hidden'));
@@ -574,36 +567,29 @@ document.getElementById('closeBackupBtn').addEventListener('click', () => backup
 document.getElementById('exportJsonBtn').addEventListener('click', () => {
   const soundsToSave = sounds.map(s => ({...s, localUrl: undefined}));
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ colors: colorCategories, sounds: soundsToSave }));
-  const a = document.createElement('a'); a.href = dataStr; a.download = "gatimusic_backup_v1.1.18.json"; document.body.appendChild(a); a.click(); a.remove();
+  const a = document.createElement('a'); a.href = dataStr; a.download = "gatimusic_backup_v1.1.19.json"; document.body.appendChild(a); a.click(); a.remove();
 });
-
 document.getElementById('importJsonTriggerBtn').addEventListener('click', () => document.getElementById('importJsonInput').click());
 document.getElementById('importJsonInput').addEventListener('change', (e) => {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
+  const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
   reader.onload = async function(event) {
     try {
       const data = JSON.parse(event.target.result);
       if (data.colors && data.sounds) {
         colorCategories = migrateCategories(data.colors); sounds = data.sounds;
         sounds.forEach(s => { if(!s.type) s.type = 'music'; if(!s.clicks) s.clicks = 0; s.localUrl = undefined; });
-        sortSoundsArray(); saveData(); backupModal.classList.add('hidden');
-        await preloadAllAudios(); renderDeck(); alert("¡Importado con éxito!");
+        sortSoundsArray(); saveData(); backupModal.classList.add('hidden'); await preloadAllAudios(); renderDeck(); alert("¡Importado con éxito!");
       } else { alert("Formato incorrecto."); }
-    } catch (err) { alert("Error leyendo el archivo JSON."); }
+    } catch (err) { alert("Error leyendo JSON."); }
   };
   reader.readAsText(file); e.target.value = ''; 
 });
-
 document.getElementById('importUrlBtn').addEventListener('click', async () => {
   let url = document.getElementById('jsonUrlInput').value.trim();
-  if (!url) { alert("Ingresa un enlace válido."); return; }
-  if (url.includes('github.com') && url.includes('/raw/')) {
-    url = url.replace('github.com', 'raw.githubusercontent.com').replace('/raw/', '/').replace('/refs/heads/', '/');
-  }
+  if (!url) return;
+  if (url.includes('github.com') && url.includes('/raw/')) url = url.replace('github.com', 'raw.githubusercontent.com').replace('/raw/', '/').replace('/refs/heads/', '/');
   try {
     const response = await fetch(url);
-    if (!response.ok) throw new Error("Error de red");
     const data = JSON.parse(await response.text());
     if (data.colors && data.sounds) {
       colorCategories = migrateCategories(data.colors); sounds = data.sounds;
