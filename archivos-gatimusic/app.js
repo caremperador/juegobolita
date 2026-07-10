@@ -1,5 +1,5 @@
 /* =========================================
-   1. VARIABLES GLOBALES Y EMOJIS (v1.1.19)
+   1. VARIABLES GLOBALES Y EMOJIS (v1.1.20)
    ========================================= */
 let colorCategories = []; 
 let sounds = [];
@@ -13,9 +13,9 @@ const EMOJI_LIST = [
 const audioPool = {}; 
 let activeMusicId = null;
 
-let currentSortMode = localStorage.getItem('gati_sort_v1119') || 'color';
-let isCompactSize = localStorage.getItem('gati_size_v1119') === 'true';
-let isEmojiMode = localStorage.getItem('gati_view_v1119') === 'emoji';
+let currentSortMode = localStorage.getItem('gati_sort_v1120') || 'color';
+let isCompactSize = localStorage.getItem('gati_size_v1120') === 'true';
+let isEmojiMode = localStorage.getItem('gati_view_v1120') === 'emoji';
 
 const DEFAULT_BACKUP_URL = "https://raw.githubusercontent.com/caremperador/audios/main/gatimusic_backup%202.json";
 
@@ -34,9 +34,9 @@ function sortSoundsArray() {
 }
 
 function saveData() {
-  localStorage.setItem('gati_colors_v1119', JSON.stringify(colorCategories));
+  localStorage.setItem('gati_colors_v1120', JSON.stringify(colorCategories));
   const soundsToSave = sounds.map(s => ({...s, localUrl: undefined}));
-  localStorage.setItem('gati_sounds_v1119', JSON.stringify(soundsToSave));
+  localStorage.setItem('gati_sounds_v1120', JSON.stringify(soundsToSave));
 }
 
 function migrateCategories(cats) {
@@ -53,7 +53,6 @@ let emojiTargetCallback = null;
 const emojiPickerModal = document.getElementById('emojiPickerModal');
 const globalEmojiPalette = document.getElementById('globalEmojiPalette');
 
-// Rellenamos el cuadro de emojis una sola vez
 EMOJI_LIST.forEach(emoji => {
   const swatch = document.createElement('div');
   swatch.className = 'emoji-swatch';
@@ -132,8 +131,8 @@ async function preloadSingleAudio(sound) {
    4. INICIO DE LA APLICACIÓN
    ========================================= */
 async function initApp() {
-  const savedColors = localStorage.getItem('gati_colors_v1119') || localStorage.getItem('gati_colors_v1118');
-  const savedSounds = localStorage.getItem('gati_sounds_v1119') || localStorage.getItem('gati_sounds_v1118');
+  const savedColors = localStorage.getItem('gati_colors_v1120') || localStorage.getItem('gati_colors_v1119');
+  const savedSounds = localStorage.getItem('gati_sounds_v1120') || localStorage.getItem('gati_sounds_v1119');
 
   if (savedColors && savedSounds) {
     colorCategories = migrateCategories(JSON.parse(savedColors));
@@ -174,7 +173,7 @@ async function initApp() {
 }
 
 /* =========================================
-   5. CONTROLES DE INTERFAZ
+   5. CONTROLES DE INTERFAZ (BOTONES TOP)
    ========================================= */
 const sizeModeBtn = document.getElementById('sizeModeBtn');
 const sortModeBtn = document.getElementById('sortModeBtn');
@@ -183,22 +182,33 @@ const viewModeBtn = document.getElementById('viewModeBtn');
 function applyUIStates() {
   if (isCompactSize) { document.body.classList.add('compact-mode'); sizeModeBtn.textContent = 'Tamaño: S'; } 
   else { document.body.classList.remove('compact-mode'); sizeModeBtn.textContent = 'Tamaño: L'; }
+  
   sortModeBtn.textContent = currentSortMode === 'top' ? 'Orden: Top' : 'Orden: Color';
   viewModeBtn.textContent = isEmojiMode ? 'Vista: Emoji' : 'Vista: Texto';
 }
 
-sizeModeBtn.addEventListener('click', () => { isCompactSize = !isCompactSize; localStorage.setItem('gati_size_v1119', isCompactSize); applyUIStates(); });
-sortModeBtn.addEventListener('click', () => { currentSortMode = currentSortMode === 'color' ? 'top' : 'color'; localStorage.setItem('gati_sort_v1119', currentSortMode); applyUIStates(); sortSoundsArray(); renderDeck(); });
-viewModeBtn.addEventListener('click', () => { isEmojiMode = !isEmojiMode; localStorage.setItem('gati_view_v1119', isEmojiMode ? 'emoji' : 'text'); applyUIStates(); renderDeck(); });
+sizeModeBtn.addEventListener('click', () => { isCompactSize = !isCompactSize; localStorage.setItem('gati_size_v1120', isCompactSize); applyUIStates(); });
+sortModeBtn.addEventListener('click', () => { currentSortMode = currentSortMode === 'color' ? 'top' : 'color'; localStorage.setItem('gati_sort_v1120', currentSortMode); applyUIStates(); sortSoundsArray(); renderDeck(); });
+viewModeBtn.addEventListener('click', () => { isEmojiMode = !isEmojiMode; localStorage.setItem('gati_view_v1120', isEmojiMode ? 'emoji' : 'text'); applyUIStates(); renderDeck(); });
 
-let isPlayerMinimized = localStorage.getItem('gati_player_min_v1119') === 'true';
+/* =========================================
+   6. REPRODUCTOR GLOBAL Y EVENTOS
+   ========================================= */
+let isEditMode = false;
+let editingId = null;
+let selectedCategoryColor = '#ffffff';
+let currentVolume = 1;
+
+let isPlayerMinimized = localStorage.getItem('gati_player_min_v1120') === 'true';
 const livePlayer = document.getElementById('livePlayer');
 const minimizeBtn = document.getElementById('minimizeBtn');
 
 function applyMinimizedState() { if (isPlayerMinimized) livePlayer.classList.add('minimized'); else livePlayer.classList.remove('minimized'); }
-minimizeBtn.addEventListener('click', () => { isPlayerMinimized = !isPlayerMinimized; localStorage.setItem('gati_player_min_v1119', isPlayerMinimized); applyMinimizedState(); });
+minimizeBtn.addEventListener('click', () => { isPlayerMinimized = !isPlayerMinimized; localStorage.setItem('gati_player_min_v1120', isPlayerMinimized); applyMinimizedState(); });
 applyMinimizedState(); 
 
+const sfxGrid = document.getElementById('sfxGrid');
+const musicGrid = document.getElementById('musicGrid');
 const volContainer = document.getElementById('volumeContainer');
 const volFill = document.getElementById('volumeFill');
 let isDraggingVol = false;
@@ -208,19 +218,25 @@ function applyVolume(newVol) {
   volFill.style.width = (currentVolume * 100) + '%';
   Object.values(audioPool).forEach(audio => { audio.volume = currentVolume; });
 }
+
 function updateVolumeFromEvent(e) {
   const rect = volContainer.getBoundingClientRect();
-  applyVolume(((e.touches ? e.touches[0].clientX : e.clientX) - rect.left) / rect.width);
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX; 
+  applyVolume((clientX - rect.left) / rect.width);
 }
+
 volContainer.addEventListener('mousedown', (e) => { isDraggingVol = true; updateVolumeFromEvent(e); });
 document.addEventListener('mousemove', (e) => { if (isDraggingVol) updateVolumeFromEvent(e); });
 document.addEventListener('mouseup', () => { isDraggingVol = false; });
 volContainer.addEventListener('touchstart', (e) => { isDraggingVol = true; updateVolumeFromEvent(e); }, {passive: false});
 volContainer.addEventListener('touchmove', (e) => { if (isDraggingVol) { e.preventDefault(); updateVolumeFromEvent(e); } }, {passive: false});
 volContainer.addEventListener('touchend', () => { isDraggingVol = false; });
+
 document.addEventListener('wheel', (e) => {
-  if (!Object.values(audioPool).some(audio => !audio.paused)) return; 
-  e.preventDefault(); applyVolume(currentVolume + (e.deltaY < 0 ? 0.05 : -0.05));
+  const isAnythingPlaying = Object.values(audioPool).some(audio => !audio.paused);
+  if (!isAnythingPlaying) return; 
+  e.preventDefault(); 
+  applyVolume(currentVolume + (e.deltaY < 0 ? 0.05 : -0.05));
 }, {passive: false});
 
 function stopAllAudio() {
@@ -229,20 +245,14 @@ function stopAllAudio() {
   document.querySelectorAll('.deck-btn').forEach(b => b.classList.remove('playing'));
   livePlayer.classList.remove('visible');
 }
+
 document.getElementById('stopBtn').addEventListener('click', stopAllAudio);
 document.getElementById('miniStopBtn').addEventListener('click', stopAllAudio);
 document.addEventListener('keydown', (e) => { if (e.target.tagName !== 'INPUT' && e.code === 'Space') { e.preventDefault(); stopAllAudio(); } });
 
 /* =========================================
-   6. RENDERIZADO
+   7. RENDERIZADO (SFX EMOJI INDIVIDUAL Y MÚSICA CON NÚMEROS)
    ========================================= */
-let isEditMode = false;
-let editingId = null;
-let selectedCategoryColor = '#ffffff';
-
-const sfxGrid = document.getElementById('sfxGrid');
-const musicGrid = document.getElementById('musicGrid');
-
 function renderDeck() {
   sfxGrid.innerHTML = '';
   musicGrid.innerHTML = '';
@@ -252,7 +262,8 @@ function renderDeck() {
     let myNumber = "";
     if (sound.type === 'music') {
         if(!colorCounters[sound.color]) colorCounters[sound.color] = 1;
-        myNumber = colorCounters[sound.color]; colorCounters[sound.color]++;
+        myNumber = colorCounters[sound.color];
+        colorCounters[sound.color]++;
     }
 
     const btn = document.createElement('div');
@@ -292,7 +303,9 @@ function renderDeck() {
 
 function handleButtonPress(sound, btnElement) {
   if (isEditMode) { openEditModal(sound); return; }
-  sound.clicks = (sound.clicks || 0) + 1; saveData(); 
+
+  sound.clicks = (sound.clicks || 0) + 1;
+  saveData(); 
 
   let player = audioPool[sound.id];
   if (!player) { player = new Audio(sound.localUrl || sound.url); audioPool[sound.id] = player; }
@@ -332,7 +345,7 @@ function handleButtonPress(sound, btnElement) {
 }
 
 /* =========================================
-   7. MODOS Y MODAL DE EDICIÓN
+   8. MODOS Y MODAL DE EDICIÓN
    ========================================= */
 const toggleEditBtn = document.getElementById('toggleEditBtn');
 toggleEditBtn.addEventListener('click', () => {
@@ -341,7 +354,8 @@ toggleEditBtn.addEventListener('click', () => {
   toggleEditBtn.textContent = `Edición: ${isEditMode ? 'ON' : 'OFF'}`;
   document.getElementById('openCategoryModalBtn').style.display = isEditMode ? 'block' : 'none';
   document.getElementById('openSortAudiosBtn').style.display = isEditMode ? 'block' : 'none';
-  if(isEditMode) stopAllAudio(); renderDeck();
+  if(isEditMode) stopAllAudio();
+  renderDeck();
 });
 
 document.getElementById('newType').addEventListener('change', (e) => {
@@ -351,10 +365,13 @@ document.getElementById('newType').addEventListener('change', (e) => {
 
 const addModal = document.getElementById('addModal');
 function renderPalette() {
-  const palette = document.getElementById('colorPalette'); palette.innerHTML = '';
+  const palette = document.getElementById('colorPalette');
+  palette.innerHTML = '';
   colorCategories.forEach(cat => {
     const swatch = document.createElement('div');
-    swatch.className = 'color-swatch'; swatch.style.backgroundColor = cat.color; swatch.style.color = cat.color;
+    swatch.className = 'color-swatch';
+    swatch.style.backgroundColor = cat.color;
+    swatch.style.color = cat.color;
     if (cat.color === selectedCategoryColor) swatch.classList.add('selected');
     swatch.addEventListener('click', () => { selectedCategoryColor = cat.color; renderPalette(); });
     palette.appendChild(swatch);
@@ -362,7 +379,7 @@ function renderPalette() {
 }
 
 function openEditModal(sound) { 
-  addModal.classList.remove('hidden'); 
+  addModal.classList.remove('d-none'); 
   if (sound) {
     editingId = sound.id;
     document.getElementById('modalTitle').textContent = "Editar Sonido";
@@ -381,7 +398,8 @@ function openEditModal(sound) {
     if(!colorCategories.some(c => c.color === sound.color)) { colorCategories.push({color: sound.color, emoji:'🎵'}); saveData(); }
     document.getElementById('deleteBtn').style.display = "block";
   } else {
-    editingId = null; document.getElementById('modalTitle').textContent = "Añadir Sonido";
+    editingId = null;
+    document.getElementById('modalTitle').textContent = "Añadir Sonido";
     document.getElementById('newLabel').value = ''; document.getElementById('newUrl').value = '';
     document.getElementById('sfxEmojiBtn').textContent = '💥';
     selectedCategoryColor = colorCategories[0]?.color || '#ffffff';
@@ -390,13 +408,10 @@ function openEditModal(sound) {
   renderPalette();
 }
 
-document.getElementById('cancelBtn').addEventListener('click', () => addModal.classList.add('hidden'));
+document.getElementById('cancelBtn').addEventListener('click', () => addModal.classList.add('d-none'));
 
-// Lógica del botón de emoji en el modal de SFX
 document.getElementById('sfxEmojiBtn').addEventListener('click', () => {
-  openEmojiPicker((selectedEmoji) => {
-    document.getElementById('sfxEmojiBtn').textContent = selectedEmoji;
-  });
+  openEmojiPicker((selectedEmoji) => { document.getElementById('sfxEmojiBtn').textContent = selectedEmoji; });
 });
 
 document.getElementById('saveBtn').addEventListener('click', async () => {
@@ -421,9 +436,11 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
       }
     } else {
       savedSoundObj = { id: Date.now(), type, label, url, color, clicks: 0, emoji: sfxEmoji };
-      sounds.push(savedSoundObj); preloadSingleAudio(savedSoundObj); 
+      sounds.push(savedSoundObj);
+      preloadSingleAudio(savedSoundObj); 
     }
-    addModal.classList.add('hidden'); sortSoundsArray(); saveData(); renderDeck();
+    addModal.classList.add('d-none');
+    sortSoundsArray(); saveData(); renderDeck();
   } else { alert("Llena el nombre y la URL."); }
 });
 
@@ -431,12 +448,12 @@ document.getElementById('deleteBtn').addEventListener('click', () => {
   if (editingId && confirm("¿Borrar este sonido?")) {
     sounds = sounds.filter(s => s.id !== editingId);
     if(audioPool[editingId]) { audioPool[editingId].pause(); delete audioPool[editingId]; }
-    addModal.classList.add('hidden'); saveData(); renderDeck();
+    addModal.classList.add('d-none'); saveData(); renderDeck();
   }
 });
 
 /* =========================================
-   8. GESTOR DE CATEGORÍAS (EMOJIS)
+   9. GESTOR DE CATEGORÍAS Y EMOJIS
    ========================================= */
 const categoryModal = document.getElementById('categoryModal');
 const sortableColorList = document.getElementById('sortableColorList');
@@ -447,7 +464,8 @@ function renderCategoryList() {
 
   colorCategories.forEach(cat => {
     const item = document.createElement('div');
-    item.className = 'sortable-item'; item.dataset.color = cat.color;
+    item.className = 'sortable-item';
+    item.dataset.color = cat.color;
     item.innerHTML = `
       <div class="drag-handle" title="Arrastrar">☰</div>
       <input type="color" class="color-edit-input" value="${cat.color}" title="Color">
@@ -493,9 +511,8 @@ function deleteCategoryColor(colorToDelete) {
   }
 }
 
-document.getElementById('openCategoryModalBtn').addEventListener('click', () => { categoryModal.classList.remove('hidden'); renderCategoryList(); });
+document.getElementById('openCategoryModalBtn').addEventListener('click', () => { categoryModal.classList.remove('d-none'); renderCategoryList(); });
 
-// Botón Emoji para la NUEVA categoría
 document.getElementById('newCatEmojiBtn').addEventListener('click', () => {
   openEmojiPicker((emoji) => { document.getElementById('newCatEmojiBtn').textContent = emoji; });
 });
@@ -505,19 +522,19 @@ document.getElementById('addNewColorBtn').addEventListener('click', () => {
   const newEmo = document.getElementById('newCatEmojiBtn').textContent || '🎵';
   if (!colorCategories.some(c => c.color === newCol)) { colorCategories.push({color: newCol, emoji: newEmo}); renderCategoryList(); saveData(); }
 });
-document.getElementById('cancelCatBtn').addEventListener('click', () => categoryModal.classList.add('hidden'));
+document.getElementById('cancelCatBtn').addEventListener('click', () => categoryModal.classList.add('d-none'));
 document.getElementById('saveCatBtn').addEventListener('click', () => {
   const newCats = [];
   document.querySelectorAll('#sortableColorList .sortable-item').forEach(item => {
     newCats.push({ color: item.querySelector('.color-edit-input').value, emoji: item.querySelector('.edit-emoji-btn').textContent || '🎵' });
   });
   colorCategories = newCats;
-  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1119', 'color'); updateSortBtnUI();
-  sortSoundsArray(); saveData(); categoryModal.classList.add('hidden'); renderDeck();
+  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1120', 'color'); updateSortBtnUI();
+  sortSoundsArray(); saveData(); categoryModal.classList.add('d-none'); renderDeck();
 });
 
 /* =========================================
-   9. ORDENAR AUDIOS INTERNAMENTE
+   10. ORDENAR AUDIOS INTERNAMENTE
    ========================================= */
 const sortAudiosModal = document.getElementById('sortAudiosModal');
 const sortAudioColorFilter = document.getElementById('sortAudioColorFilter');
@@ -525,7 +542,7 @@ const sortableAudiosList = document.getElementById('sortableAudiosList');
 let sortableAudiosInstance = null;
 
 document.getElementById('openSortAudiosBtn').addEventListener('click', () => {
-  sortAudiosModal.classList.remove('hidden'); sortAudioColorFilter.innerHTML = '';
+  sortAudiosModal.classList.remove('d-none'); sortAudioColorFilter.innerHTML = '';
   colorCategories.forEach(cat => {
     const opt = document.createElement('option');
     opt.value = cat.color; opt.textContent = `${cat.emoji} ${cat.color.toUpperCase()}`; opt.style.background = cat.color; opt.style.color = "black";
@@ -548,26 +565,26 @@ function renderSortableAudiosList() {
   if(sortableAudiosInstance) sortableAudiosInstance.destroy();
   sortableAudiosInstance = new Sortable(sortableAudiosList, { animation: 150, handle: '.drag-handle', ghostClass: 'sortable-ghost' });
 }
-document.getElementById('cancelSortAudiosBtn').addEventListener('click', () => sortAudiosModal.classList.add('hidden'));
+document.getElementById('cancelSortAudiosBtn').addEventListener('click', () => sortAudiosModal.classList.add('d-none'));
 document.getElementById('saveSortAudiosBtn').addEventListener('click', () => {
   const filterColor = sortAudioColorFilter.value;
   const newOrderIds = Array.from(document.querySelectorAll('.sortable-audio-item')).map(el => Number(el.dataset.id));
   sounds.sort((a, b) => { if (a.color === filterColor && b.color === filterColor && a.type === 'music' && b.type === 'music') { return newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id); } return 0; });
-  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1119', 'color'); updateSortBtnUI();
-  saveData(); sortAudiosModal.classList.add('hidden'); renderDeck();
+  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1120', 'color'); updateSortBtnUI();
+  saveData(); sortAudiosModal.classList.add('d-none'); renderDeck();
 });
 
 /* =========================================
-   10. IMPORTAR / EXPORTAR JSON
+   11. IMPORTAR / EXPORTAR
    ========================================= */
 const backupModal = document.getElementById('backupModal');
-document.getElementById('openBackupModalBtn').addEventListener('click', () => backupModal.classList.remove('hidden'));
-document.getElementById('closeBackupBtn').addEventListener('click', () => backupModal.classList.add('hidden'));
+document.getElementById('openBackupModalBtn').addEventListener('click', () => backupModal.classList.remove('d-none'));
+document.getElementById('closeBackupBtn').addEventListener('click', () => backupModal.classList.add('d-none'));
 
 document.getElementById('exportJsonBtn').addEventListener('click', () => {
   const soundsToSave = sounds.map(s => ({...s, localUrl: undefined}));
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ colors: colorCategories, sounds: soundsToSave }));
-  const a = document.createElement('a'); a.href = dataStr; a.download = "gatimusic_backup_v1.1.19.json"; document.body.appendChild(a); a.click(); a.remove();
+  const a = document.createElement('a'); a.href = dataStr; a.download = "gatimusic_backup_v1.1.20.json"; document.body.appendChild(a); a.click(); a.remove();
 });
 document.getElementById('importJsonTriggerBtn').addEventListener('click', () => document.getElementById('importJsonInput').click());
 document.getElementById('importJsonInput').addEventListener('change', (e) => {
@@ -578,7 +595,7 @@ document.getElementById('importJsonInput').addEventListener('change', (e) => {
       if (data.colors && data.sounds) {
         colorCategories = migrateCategories(data.colors); sounds = data.sounds;
         sounds.forEach(s => { if(!s.type) s.type = 'music'; if(!s.clicks) s.clicks = 0; s.localUrl = undefined; });
-        sortSoundsArray(); saveData(); backupModal.classList.add('hidden'); await preloadAllAudios(); renderDeck(); alert("¡Importado con éxito!");
+        sortSoundsArray(); saveData(); backupModal.classList.add('d-none'); await preloadAllAudios(); renderDeck(); alert("¡Importado con éxito!");
       } else { alert("Formato incorrecto."); }
     } catch (err) { alert("Error leyendo JSON."); }
   };
@@ -594,7 +611,7 @@ document.getElementById('importUrlBtn').addEventListener('click', async () => {
     if (data.colors && data.sounds) {
       colorCategories = migrateCategories(data.colors); sounds = data.sounds;
       sounds.forEach(s => { if(!s.type) s.type = 'music'; if(!s.clicks) s.clicks = 0; s.localUrl = undefined; });
-      sortSoundsArray(); saveData(); document.getElementById('jsonUrlInput').value = ''; backupModal.classList.add('hidden');
+      sortSoundsArray(); saveData(); document.getElementById('jsonUrlInput').value = ''; backupModal.classList.add('d-none');
       await preloadAllAudios(); renderDeck(); alert("¡Sincronizado desde URL con éxito!");
     } else { alert("Archivo no válido."); }
   } catch (err) { alert(`Error: ${err.message}`); }
