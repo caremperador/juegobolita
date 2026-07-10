@@ -4,6 +4,9 @@
 * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
 body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Inter', sans-serif; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
 
+/* NUEVO: Ocultar de verdad */
+.d-none { display: none !important; }
+
 .app-container { width: 100%; max-width: 500px; height: 100vh; display: flex; flex-direction: column; background: var(--bg-color); box-shadow: 0 0 50px rgba(0,0,0,0.5); position: relative; }
 
 /* Preloader */
@@ -88,8 +91,10 @@ h1 { font-size: 1rem; font-weight: 800; letter-spacing: 1px; text-transform: upp
 .modal.hidden { opacity: 0; pointer-events: none; }
 .modal-content { background: var(--panel-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; display: flex; flex-direction: column; gap: 15px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto;}
 .modal-content h2 { font-size: 1.2rem; text-align: center; margin-bottom: 5px; }
+
+/* CORREGIDO: Estilos para que los options se vean en todos los navegadores */
 .modal-content input[type="text"], .modal-content select { width: 100%; padding: 12px; border-radius: 8px; border: none; background: rgba(0,0,0,0.5); color: white; outline: none; font-family: 'Inter', sans-serif; font-size: 0.9rem;}
-.hidden { display: none !important; }
+select option { background-color: var(--panel-bg); color: #ffffff; font-size: 1.2rem; }
 
 .color-section { display: flex; flex-direction: column; gap: 8px; }
 .color-palette { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -109,7 +114,7 @@ h1 { font-size: 1rem; font-weight: 800; letter-spacing: 1px; text-transform: upp
 .color-edit-input { -webkit-appearance: none; border: none; width: 30px; height: 30px; border-radius: 5px; cursor: pointer; background: transparent; padding: 0; }
 .color-edit-input::-webkit-color-swatch-wrapper { padding: 0; }
 .color-edit-input::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0.2); border-radius: 5px; }
-.emoji-edit-input { width: 50px !important; height: 30px; padding: 0 5px !important; font-size: 1rem !important; }
+.emoji-edit-input { width: 60px !important; height: 35px; padding: 0 !important; text-align: center; font-size: 1.2rem !important; }
 .btn-delete-cat { background: #ff3366; color: white; border: none; border-radius: 5px; width: 30px; height: 30px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
 /* Botones genéricos de modales */

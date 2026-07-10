@@ -4,7 +4,6 @@
 let colorCategories = []; 
 let sounds = [];
 
-// Lista de Emojis Globales para Streaming/Gaming
 const EMOJI_LIST = [
   '🎵','🔥','💥','🤣','😱','🚨','👏','🤡','💀','🔫',
   '🔔','🎮','🏆','👽','👻','💩','😎','😡','😭','🤯',
@@ -14,9 +13,9 @@ const EMOJI_LIST = [
 const audioPool = {}; 
 let activeMusicId = null;
 
-let currentSortMode = localStorage.getItem('gati_sort_v1116') || 'color';
-let isCompactSize = localStorage.getItem('gati_size_v1116') === 'true';
-let isEmojiMode = localStorage.getItem('gati_view_v1116') === 'emoji';
+let currentSortMode = localStorage.getItem('gati_sort_v1117') || 'color';
+let isCompactSize = localStorage.getItem('gati_size_v1117') === 'true';
+let isEmojiMode = localStorage.getItem('gati_view_v1117') === 'emoji';
 
 const DEFAULT_BACKUP_URL = "https://raw.githubusercontent.com/caremperador/audios/main/gatimusic_backup%202.json";
 
@@ -35,9 +34,9 @@ function sortSoundsArray() {
 }
 
 function saveData() {
-  localStorage.setItem('gati_colors_v1116', JSON.stringify(colorCategories));
+  localStorage.setItem('gati_colors_v1117', JSON.stringify(colorCategories));
   const soundsToSave = sounds.map(s => ({...s, localUrl: undefined}));
-  localStorage.setItem('gati_sounds_v1116', JSON.stringify(soundsToSave));
+  localStorage.setItem('gati_sounds_v1117', JSON.stringify(soundsToSave));
 }
 
 function migrateCategories(cats) {
@@ -47,13 +46,11 @@ function migrateCategories(cats) {
   });
 }
 
-// Función para rellenar los selects de emojis
 function populateEmojiSelects() {
   const selects = document.querySelectorAll('.emoji-select');
   const optionsHTML = EMOJI_LIST.map(e => `<option value="${e}">${e}</option>`).join('');
   selects.forEach(sel => {
-    // Si ya tiene opciones, no lo reescribimos todo
-    if (sel.options.length < EMOJI_LIST.length) sel.innerHTML = optionsHTML;
+    sel.innerHTML = optionsHTML;
   });
 }
 
@@ -117,8 +114,8 @@ async function preloadSingleAudio(sound) {
 async function initApp() {
   populateEmojiSelects();
 
-  const savedColors = localStorage.getItem('gati_colors_v1116') || localStorage.getItem('gati_colors_v1115');
-  const savedSounds = localStorage.getItem('gati_sounds_v1116') || localStorage.getItem('gati_sounds_v1115');
+  const savedColors = localStorage.getItem('gati_colors_v1117') || localStorage.getItem('gati_colors_v1116');
+  const savedSounds = localStorage.getItem('gati_sounds_v1117') || localStorage.getItem('gati_sounds_v1116');
 
   if (savedColors && savedSounds) {
     colorCategories = migrateCategories(JSON.parse(savedColors));
@@ -173,9 +170,9 @@ function applyUIStates() {
   viewModeBtn.textContent = isEmojiMode ? 'Vista: Emoji' : 'Vista: Texto';
 }
 
-sizeModeBtn.addEventListener('click', () => { isCompactSize = !isCompactSize; localStorage.setItem('gati_size_v1116', isCompactSize); applyUIStates(); });
-sortModeBtn.addEventListener('click', () => { currentSortMode = currentSortMode === 'color' ? 'top' : 'color'; localStorage.setItem('gati_sort_v1116', currentSortMode); applyUIStates(); sortSoundsArray(); renderDeck(); });
-viewModeBtn.addEventListener('click', () => { isEmojiMode = !isEmojiMode; localStorage.setItem('gati_view_v1116', isEmojiMode ? 'emoji' : 'text'); applyUIStates(); renderDeck(); });
+sizeModeBtn.addEventListener('click', () => { isCompactSize = !isCompactSize; localStorage.setItem('gati_size_v1117', isCompactSize); applyUIStates(); });
+sortModeBtn.addEventListener('click', () => { currentSortMode = currentSortMode === 'color' ? 'top' : 'color'; localStorage.setItem('gati_sort_v1117', currentSortMode); applyUIStates(); sortSoundsArray(); renderDeck(); });
+viewModeBtn.addEventListener('click', () => { isEmojiMode = !isEmojiMode; localStorage.setItem('gati_view_v1117', isEmojiMode ? 'emoji' : 'text'); applyUIStates(); renderDeck(); });
 
 /* =========================================
    5. REPRODUCTOR GLOBAL Y EVENTOS
@@ -185,12 +182,12 @@ let editingId = null;
 let selectedCategoryColor = '#ffffff';
 let currentVolume = 1;
 
-let isPlayerMinimized = localStorage.getItem('gati_player_min_v1116') === 'true';
+let isPlayerMinimized = localStorage.getItem('gati_player_min_v1117') === 'true';
 const livePlayer = document.getElementById('livePlayer');
 const minimizeBtn = document.getElementById('minimizeBtn');
 
 function applyMinimizedState() { if (isPlayerMinimized) livePlayer.classList.add('minimized'); else livePlayer.classList.remove('minimized'); }
-minimizeBtn.addEventListener('click', () => { isPlayerMinimized = !isPlayerMinimized; localStorage.setItem('gati_player_min_v1116', isPlayerMinimized); applyMinimizedState(); });
+minimizeBtn.addEventListener('click', () => { isPlayerMinimized = !isPlayerMinimized; localStorage.setItem('gati_player_min_v1117', isPlayerMinimized); applyMinimizedState(); });
 applyMinimizedState(); 
 
 const sfxGrid = document.getElementById('sfxGrid');
@@ -246,7 +243,6 @@ function renderDeck() {
   let colorCounters = {};
 
   sounds.forEach((sound) => {
-    // Calculamos su número si es música
     let myNumber = "";
     if (sound.type === 'music') {
         if(!colorCounters[sound.color]) colorCounters[sound.color] = 1;
@@ -264,11 +260,9 @@ function renderDeck() {
 
     if (isEmojiMode) {
       if (sound.type === 'sfx') {
-        // SFX: Muestra su emoji individual, sin número
         let sfxEmoji = sound.emoji || '💥';
         btn.innerHTML = `<div class="emoji-wrapper"><span class="btn-emoji" style="font-size:2.8rem;">${sfxEmoji}</span></div><span class="btn-label-micro">${sound.label}</span>`;
       } else {
-        // MÚSICA: Muestra emoji de la categoría + número
         const catObj = colorCategories.find(c => c.color === sound.color) || { emoji: '🎵' };
         btn.innerHTML = `<div class="emoji-wrapper"><span class="btn-emoji">${catObj.emoji}</span><span class="btn-number">${myNumber}</span></div><span class="btn-label-micro">${sound.label}</span>`;
       }
@@ -284,11 +278,11 @@ function renderDeck() {
 
   if (isEditMode) {
     const addBtnSfx = document.createElement('div'); addBtnSfx.className = 'deck-btn add-btn'; addBtnSfx.innerHTML = '<span>+</span>';
-    addBtnSfx.addEventListener('click', () => { document.getElementById('newType').value = 'sfx'; document.getElementById('sfxEmojiSection').classList.remove('hidden'); openEditModal(null); });
+    addBtnSfx.addEventListener('click', () => { document.getElementById('newType').value = 'sfx'; document.getElementById('sfxEmojiSection').classList.remove('d-none'); openEditModal(null); });
     sfxGrid.appendChild(addBtnSfx);
 
     const addBtnMusic = document.createElement('div'); addBtnMusic.className = 'deck-btn add-btn'; addBtnMusic.innerHTML = '<span>+</span>';
-    addBtnMusic.addEventListener('click', () => { document.getElementById('newType').value = 'music'; document.getElementById('sfxEmojiSection').classList.add('hidden'); openEditModal(null); });
+    addBtnMusic.addEventListener('click', () => { document.getElementById('newType').value = 'music'; document.getElementById('sfxEmojiSection').classList.add('d-none'); openEditModal(null); });
     musicGrid.appendChild(addBtnMusic);
   }
 }
@@ -350,10 +344,10 @@ toggleEditBtn.addEventListener('click', () => {
   renderDeck();
 });
 
-// Selector de Tipo de Audio dinámico
+// Selector de Tipo de Audio dinámico (CORREGIDO con d-none)
 document.getElementById('newType').addEventListener('change', (e) => {
-  if(e.target.value === 'sfx') { document.getElementById('sfxEmojiSection').classList.remove('hidden'); } 
-  else { document.getElementById('sfxEmojiSection').classList.add('hidden'); }
+  if(e.target.value === 'sfx') { document.getElementById('sfxEmojiSection').classList.remove('d-none'); } 
+  else { document.getElementById('sfxEmojiSection').classList.add('d-none'); }
 });
 
 const addModal = document.getElementById('addModal');
@@ -382,10 +376,10 @@ function openEditModal(sound) {
     selectedCategoryColor = sound.color;
     
     if (sound.type === 'sfx') {
-        document.getElementById('sfxEmojiSection').classList.remove('hidden');
+        document.getElementById('sfxEmojiSection').classList.remove('d-none');
         document.getElementById('newSfxEmoji').value = sound.emoji || '💥';
     } else {
-        document.getElementById('sfxEmojiSection').classList.add('hidden');
+        document.getElementById('sfxEmojiSection').classList.add('d-none');
     }
 
     if(!colorCategories.some(c => c.color === sound.color)) { colorCategories.push({color: sound.color, emoji:'🎵'}); saveData(); }
@@ -442,7 +436,7 @@ document.getElementById('deleteBtn').addEventListener('click', () => {
 });
 
 /* =========================================
-   8. GESTOR DE CATEGORÍAS (MÚSICA EMOJIS)
+   8. GESTOR DE CATEGORÍAS Y EMOJIS
    ========================================= */
 const categoryModal = document.getElementById('categoryModal');
 const sortableColorList = document.getElementById('sortableColorList');
@@ -451,7 +445,6 @@ let sortableCatInstance = null;
 function renderCategoryList() {
   sortableColorList.innerHTML = '';
   
-  // HTML para generar los selects en la lista
   const emojiOptionsTemplate = EMOJI_LIST.map(e => `<option value="${e}">${e}</option>`).join('');
 
   colorCategories.forEach(cat => {
@@ -466,7 +459,6 @@ function renderCategoryList() {
       <button class="btn-delete-cat" title="Eliminar">✖</button>
     `;
 
-    // Setea el valor actual del emoji en el select recién creado
     item.querySelector('.emoji-edit-input').value = cat.emoji || '🎵';
 
     item.querySelector('.color-edit-input').addEventListener('change', (e) => { updateCategoryColor(cat.color, e.target.value, item.querySelector('.emoji-edit-input').value); });
@@ -515,12 +507,12 @@ document.getElementById('saveCatBtn').addEventListener('click', () => {
     });
   });
   colorCategories = newCats;
-  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1116', 'color'); updateSortBtnUI();
+  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1117', 'color'); updateSortBtnUI();
   sortSoundsArray(); saveData(); categoryModal.classList.add('hidden'); renderDeck();
 });
 
 /* =========================================
-   9. ORDENAR AUDIOS INTERNAMENTE (NÚMEROS)
+   9. ORDENAR AUDIOS INTERNAMENTE
    ========================================= */
 const sortAudiosModal = document.getElementById('sortAudiosModal');
 const sortAudioColorFilter = document.getElementById('sortAudioColorFilter');
@@ -547,7 +539,6 @@ function renderSortableAudiosList() {
   const filterColor = sortAudioColorFilter.value;
   sortableAudiosList.innerHTML = '';
   
-  // Filtramos solo la Música, porque los SFX no tienen orden numerado por color
   const filteredSounds = sounds.filter(s => s.color === filterColor && s.type === 'music');
   
   filteredSounds.forEach(sound => {
@@ -579,9 +570,12 @@ document.getElementById('saveSortAudiosBtn').addEventListener('click', () => {
     return 0; 
   });
   
-  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1116', 'color'); updateSortBtnUI();
-  saveData(); sortAudiosModal.classList.add('hidden'); renderDeck();
+  currentSortMode = 'color'; localStorage.setItem('gati_sort_v1117', 'color'); updateSortBtnUI();
+  saveData();
+  sortAudiosModal.classList.add('hidden');
+  renderDeck();
 });
+
 
 /* =========================================
    10. IMPORTAR / EXPORTAR JSON Y URL
@@ -593,7 +587,7 @@ document.getElementById('closeBackupBtn').addEventListener('click', () => backup
 document.getElementById('exportJsonBtn').addEventListener('click', () => {
   const soundsToSave = sounds.map(s => ({...s, localUrl: undefined}));
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ colors: colorCategories, sounds: soundsToSave }));
-  const a = document.createElement('a'); a.href = dataStr; a.download = "gatimusic_backup_v1.1.16.json"; document.body.appendChild(a); a.click(); a.remove();
+  const a = document.createElement('a'); a.href = dataStr; a.download = "gatimusic_backup_v1.1.17.json"; document.body.appendChild(a); a.click(); a.remove();
 });
 
 document.getElementById('importJsonTriggerBtn').addEventListener('click', () => document.getElementById('importJsonInput').click());
@@ -605,12 +599,7 @@ document.getElementById('importJsonInput').addEventListener('change', (e) => {
       const data = JSON.parse(event.target.result);
       if (data.colors && data.sounds) {
         colorCategories = migrateCategories(data.colors); sounds = data.sounds;
-        sounds.forEach(s => { 
-          if(!s.type) s.type = 'music'; 
-          if(!s.clicks) s.clicks = 0; 
-          if(s.type === 'sfx' && !s.emoji) s.emoji = '💥';
-          s.localUrl = undefined; 
-        });
+        sounds.forEach(s => { if(!s.type) s.type = 'music'; if(!s.clicks) s.clicks = 0; s.localUrl = undefined; });
         sortSoundsArray(); saveData(); backupModal.classList.add('hidden');
         await preloadAllAudios(); renderDeck();
         alert("¡Importado con éxito!");
@@ -632,12 +621,7 @@ document.getElementById('importUrlBtn').addEventListener('click', async () => {
     const data = JSON.parse(await response.text());
     if (data.colors && data.sounds) {
       colorCategories = migrateCategories(data.colors); sounds = data.sounds;
-      sounds.forEach(s => { 
-        if(!s.type) s.type = 'music'; 
-        if(!s.clicks) s.clicks = 0; 
-        if(s.type === 'sfx' && !s.emoji) s.emoji = '💥';
-        s.localUrl = undefined; 
-      });
+      sounds.forEach(s => { if(!s.type) s.type = 'music'; if(!s.clicks) s.clicks = 0; s.localUrl = undefined; });
       sortSoundsArray(); saveData(); document.getElementById('jsonUrlInput').value = ''; backupModal.classList.add('hidden');
       await preloadAllAudios(); renderDeck();
       alert("¡Sincronizado desde URL con éxito!");
